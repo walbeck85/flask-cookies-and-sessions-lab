@@ -28,18 +28,25 @@ def index_articles():
 @app.route('/articles/<int:id>')
 def show_article(id):
     """
-    Step 2: Increment the session on each request.
+    Step 3: Return article data or paywall message based on session['page_views'].
     """
 
-    # Safely initialize the page_views session key
-    session['page_views'] = session.get('page_views', 0)
-    session['page_views'] += 1
+    # Initialize and increment the page view count
+    session['page_views'] = session.get('page_views', 0) + 1
     session.modified = True
 
-    return jsonify({
-        'message': 'Page view count updated',
-        'page_views': session['page_views']
-    }), 200
+    # Enforce the 3-article paywall limit
+    if session['page_views'] <= 3:
+        article = Article.query.get(id)
+
+        if not article:
+            return jsonify({'message': 'Article not found'}), 404
+
+        article_data = ArticleSchema().dump(article)
+        return jsonify(article_data), 200
+
+    else:
+        return jsonify({'message': 'Maximum pageview limit reached'}), 401
 
 
 if __name__ == '__main__':
