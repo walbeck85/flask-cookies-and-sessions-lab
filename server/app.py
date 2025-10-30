@@ -28,16 +28,16 @@ def index_articles():
 @app.route('/articles/<int:id>')
 def show_article(id):
     """
-    Step 1: Initialize the session for page views.
-    When a user first visits any article, create session['page_views'] if missing.
+    Step 2: Increment the session on each request.
     """
 
     # Safely initialize the page_views session key
     session['page_views'] = session.get('page_views', 0)
+    session['page_views'] += 1
+    session.modified = True
 
-    # Temporary response (for debugging)
     return jsonify({
-        'message': 'Session initialized',
+        'message': 'Page view count updated',
         'page_views': session['page_views']
     }), 200
 
