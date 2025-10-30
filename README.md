@@ -121,3 +121,163 @@ Best Practice documentation steps:
 CodeGrade will use the same test suite as the test suite included.
 
 Once all tests are passing, commit and push your work using `git` to submit to CodeGrade through Canvas.
+
+# Lab Submission: Cookies and Sessions – Paywall Feature
+
+This repository contains my implementation for the Module 1 lab in **Course 10: Client-Server Data Management**. The goal is to demonstrate state persistence between HTTP requests using Flask’s `session` object and browser cookies.  
+The completed application enforces a **three-article paywall**: each time a user views an article, the backend increments a session counter. After three page views, further requests return an HTTP 401 Unauthorized response and a JSON error message. This implementation moves paywall logic from the frontend to the backend, ensuring it cannot be bypassed through browser developer tools.
+
+## Features
+
+- Tracks individual user page views using Flask’s signed session cookie.
+- Enforces a **maximum of three articles** before the paywall appears.
+- Returns structured JSON responses:
+  - Article data for the first three views.
+  - `{"message": "Maximum pageview limit reached"}` with status 401 afterward.
+- Provides a `/clear` route to reset the session manually.
+- Includes full React frontend integration for local testing.
+- Passes all automated tests in `pytest`.
+
+## Environment
+
+- Python 3.8.x (tested locally with 3.8.13)  
+- Node v18 or higher for the React client  
+- macOS Terminal / Bash environment  
+- Flask 2.2.x, SQLAlchemy 1.4.x, and Marshmallow 3.x (managed by Pipenv)
+
+## Setup
+
+Clone the repository and enter the project directory:
+
+```bash
+git clone <https://github.com/walbeck85/flask-cookies-and-sessions-labl>
+cd flask-cookies-and-sessions-lab
+```
+
+Create and activate the virtual environment:
+
+```bash
+pipenv install
+pipenv shell
+```
+
+Install frontend dependencies:
+
+```bash
+npm install --prefix client
+```
+
+Run database migrations and seed data:
+
+```bash
+cd server
+flask db upgrade
+python seed.py
+cd ..
+```
+
+## How to run the application
+
+Start the Flask API:
+
+```bash
+python server/app.py
+```
+
+In a second terminal window, start the React frontend:
+
+```bash
+npm start --prefix client
+```
+
+Once both servers are running:
+
+- Flask API → http://localhost:5555  
+- React app → http://localhost:4000  
+
+If the Flask server isn’t active, the client may temporarily display:
+
+```
+Proxy error: Could not proxy request /articles from localhost:4000 to http://localhost:5555.
+```
+
+That message disappears once Flask is running.
+
+## File structure
+
+```
+.
+├── client/
+│   ├── package.json
+│   └── src/
+│       └── components/
+│           ├── App.js
+│           ├── Article.js
+│           ├── Header.js
+│           └── Paywall.js
+├── server/
+│   ├── app.py
+│   ├── models.py
+│   ├── seed.py
+│   └── testing/
+│       ├── app_test.py
+│       └── conftest.py
+├── migrations/
+├── Pipfile
+├── README.md
+└── pytest.ini
+```
+
+## Testing
+
+Run the backend test suite from the project root:
+
+```bash
+pytest -v
+```
+
+Expected output:
+
+```
+3 passed, 7 warnings in 0.20s
+```
+
+Warnings refer to SQLAlchemy’s deprecation of `Query.get()` and do not affect grading.
+
+Manual test procedure:
+
+1. Visit `/articles/1`, `/articles/2`, and `/articles/3` → returns article JSON.
+2. Visit `/articles/4` → returns 401 Unauthorized with paywall message.
+3. Visit `/clear` → resets session for further testing.
+
+## Rubric alignment
+
+- **Article Show Route:** `/articles/<id>` returns the correct article for first 3 views.  
+- **Session:** `session['page_views']` initializes at 0 and increments with each request.  
+- **Paywall:** Requests after 3 views return status 401 with the correct JSON message.  
+- **Persistence:** Behavior verified across multiple requests within one browser session.  
+- **Reset:** `/clear` properly clears session data and returns 200.
+
+## Branch and PR workflow
+
+Work was completed on feature branches:
+- `feature/step-1-initialize-session`
+- `feature/step-2-increment-session`
+- `feature/step-3-send-response`
+
+Each branch was merged into `main` after review and successful local testing.  
+Final commits were pushed to GitHub before submission.
+
+## Troubleshooting
+
+- If `flask db upgrade` fails, ensure you are in the project root and that the virtual environment is active.  
+- If the database appears empty, re-seed with `python server/seed.py`.  
+- If `pytest` cannot locate Flask, confirm `FLASK_APP=server.app` and rerun inside the Pipenv shell.  
+- If the client shows a proxy error, restart both the Flask and React servers.
+
+## Instructor checklist
+
+- Confirm migrations and seeding complete successfully.  
+- Run `python server/app.py` to start the Flask API.  
+- Verify that `/articles/<id>` increments session counts and triggers paywall after three requests.  
+- Confirm all `pytest` tests pass (`3/3 PASSED`).  

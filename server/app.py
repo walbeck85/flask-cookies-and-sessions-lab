@@ -3,7 +3,7 @@
 from flask import Flask, make_response, jsonify, session
 from flask_migrate import Migrate
 
-from models import db, Article, User, ArticleSchema, UserSchema
+from server.models import db, Article, User, ArticleSchema, UserSchema
 
 app = Flask(__name__)
 app.secret_key = b'Y\xf1Xz\x00\xad|eQ\x80t \xca\x1a\x10K'
@@ -14,6 +14,14 @@ app.json.compact = False
 migrate = Migrate(app, db)
 
 db.init_app(app)
+
+if __name__ == "__main__":
+    with app.app_context():
+        from sqlalchemy import inspect
+        inspector = inspect(db.engine)
+        if 'articles' not in inspector.get_table_names():
+            print(".  Detected missing 'articles' table. Run these commands from project root:")
+            print("   flask db upgrade && python server/seed.py")
 
 @app.route('/clear')
 def clear_session():
